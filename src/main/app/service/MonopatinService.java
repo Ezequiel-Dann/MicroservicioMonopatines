@@ -1,9 +1,11 @@
 package main.app.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import main.app.model.Monopatin;
 import main.app.repository.MonopatinRepository;
 
 public class MonopatinService {
@@ -62,5 +64,8 @@ public class MonopatinService {
         } else {
             throw new IllegalArgumentException("Monopatin no encontrado.");
         }
+    }
+    public List<Monopatin> getAllDisponibles() {
+        return monopatinRepository.findAllDisponibles();;
     }
 }
