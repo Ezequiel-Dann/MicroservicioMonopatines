@@ -5,27 +5,20 @@ import jakarta.persistence.*;
 @Entity
 public class Monopatin {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
     @Column
     private boolean isDisponible;
     @Column
     private boolean isEncendido;
     @Column
-    private GPS gps;
+    private double longitud;
     @Column
-    @OneToMany
-    private Parada parada;
+    private double latitud;
 
-    public Monopatin(boolean isDisponible, boolean isEncendido, GPS gps, Parada parada) {
-        this.isDisponible = isDisponible;
-        this.isEncendido = isEncendido;
-        this.gps = gps;
-        this.parada = parada;
-    }
 
-    public String getId() {
+    public Integer getId() {
         return id;
     }
 
@@ -37,13 +30,6 @@ public class Monopatin {
         return isEncendido;
     }
 
-    public GPS getGps() {
-        return gps;
-    }
-
-    public Parada getParada() {
-        return parada;
-    }
 
     public void setDisponible(boolean disponible) {
         isDisponible = disponible;
@@ -53,11 +39,21 @@ public class Monopatin {
         isEncendido = encendido;
     }
 
-    public void setGps(GPS gps) {
-        this.gps = gps;
-    }
+	public double getLongitud() {
+		return longitud;
+	}
 
-    public void setParada(Parada parada) {
-        this.parada = parada;
-    }
+	public void setLongitud(double longitud) {
+		this.longitud = longitud;
+	}
+
+	public double getLatitud() {
+		return latitud;
+	}
+
+	public void setLatitud(double latitud) {
+		this.latitud = latitud;
+	}
+
+
 }

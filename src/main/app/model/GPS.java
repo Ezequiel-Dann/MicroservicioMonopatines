@@ -43,4 +43,9 @@ public class GPS {
     public String toString() {
         return "latitud= " + latitud + ", longitud= " + longitud + '}';
     }
+
+	public boolean isInLocation(GPS gps) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

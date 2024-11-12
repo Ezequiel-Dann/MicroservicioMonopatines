@@ -74,14 +74,14 @@ public class MonopatinService {
         }
     }
     public List<Monopatin> getAllDisponibles() {
-        return monopatinRepository.findAllDisponibles();;
+        return monopatinRepository.findAllDisponibles();
     }
   //TODO verificar el url
-    public boolean verificarUbicacionEnParada(GPSDTO gpsMonopatin, Long paradaId) {
+    public boolean verificarUbicacionEnParada(GPSDTO gpsMonopatin) {
         String url = "No se si esto esta bien";
 
         // Crear el objeto de solicitud con GPS del monopatín y ID de parada
-        VerificacionParadaDTO solicitud = new VerificacionParadaDTO(gpsMonopatin, paradaId);
+        VerificacionParadaDTO solicitud = new VerificacionParadaDTO(gpsMonopatin);
         
         // Enviar la solicitud al microservicio de Parada y obtener la respuesta
         ResponseEntity<Boolean> response = restTemplate.postForEntity(url, solicitud, Boolean.class);
