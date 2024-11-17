@@ -1,9 +1,11 @@
 package main.app.model;
 
+import java.io.Serializable;
+
 import jakarta.persistence.*;
 
 @Entity
-public class Monopatin {
+public class Monopatin implements Serializable{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -16,9 +18,46 @@ public class Monopatin {
     private double longitud;
     @Column
     private double latitud;
+    @Column
+    private Integer parada;
+    @Column 
+    private boolean mantenimiento;
+    
+    public Monopatin() {
+    	
+    }
 
+    public Monopatin(Integer id, boolean isDisponible, boolean isEncendido, double longitud, double latitud,
+			Integer parada,boolean mantenimiento) {
+		super();
+		this.id = id;
+		this.isDisponible = isDisponible;
+		this.isEncendido = isEncendido;
+		this.longitud = longitud;
+		this.latitud = latitud;
+		this.parada = parada;
+		this.mantenimiento = mantenimiento;
+	}
 
-    public Integer getId() {
+    
+    
+	public boolean isMantenimiento() {
+		return mantenimiento;
+	}
+
+	public void setMantenimiento(boolean mantenimiento) {
+		this.mantenimiento = mantenimiento;
+	}
+
+	public Integer getParada() {
+		return parada;
+	}
+
+	public void setParada(Integer parada) {
+		this.parada = parada;
+	}
+
+	public Integer getId() {
         return id;
     }
 

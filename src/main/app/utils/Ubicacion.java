@@ -1,12 +1,12 @@
 package main.app.utils;
 
-public class GPS {
+public class Ubicacion {
 	private double longitud;
 	private double latitud;
 	
 	
 	
-	public GPS(double longitud, double latitud) {
+	public Ubicacion(double longitud, double latitud) {
 		super();
 		this.longitud = longitud;
 		this.latitud = latitud;
@@ -38,7 +38,7 @@ public class GPS {
 
 
 
-	public boolean isInLocation(double longitud,double latitud) {
-		return Math.abs(this.longitud - longitud) <0.05 && Math.abs(this.latitud - latitud)<0.05;
+	public boolean isInLocation(Ubicacion otraUbicacion) {
+		return Math.abs(this.longitud - otraUbicacion.getLongitud()) <0.05 && Math.abs(this.latitud - otraUbicacion.getLatitud())<0.05;
 	}
 }
