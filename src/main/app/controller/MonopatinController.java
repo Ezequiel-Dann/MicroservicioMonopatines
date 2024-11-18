@@ -78,5 +78,11 @@ public class MonopatinController {
 		return monopatinService.patch(monopatin,id);
 	}
 	
-	//TODO patch monopatin
+	/*TODO
+	Como administrador quiero consultar los monopatines con más de X viajes en un cierto año
+	
+	 Como encargado de mantenimiento quiero poder generar un reporte de uso de monopatines por
+	kilómetros para establecer si un monopatín requiere de mantenimiento. Este reporte debe poder
+	configurarse para incluir (o no) los tiempos de pausa.
+	*/
 }
