@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -13,20 +14,30 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.function.EntityResponse;
 
 import main.app.dto.GPSDTO;
+import main.app.dto.MonopatinDTO;
 import main.app.dto.ReporteOperacionDTO;
 import main.app.model.Monopatin;
 import main.app.repository.MonopatinRepository;
+import main.app.utils.GenericObjectPatcher;
 
 public class MonopatinService {
 	@Autowired
 	private final MonopatinRepository monopatinRepository;
 	@Autowired
 	private final RestTemplate restTemplate;
+	
+	@Value("${baseURLParada}")
+	private final String baseURLParada;
+	
+	@Value("${baseURLLogMantenimiento}")
+	private final String baseURLLogMantenimiento;
 
     
-    public MonopatinService(RestTemplate restTemplate, MonopatinRepository monopatinRepository) {
+    public MonopatinService(RestTemplate restTemplate, MonopatinRepository monopatinRepository,String baseURLParada,String baseURLLogMantenimiento) {
         this.restTemplate = restTemplate;
         this.monopatinRepository = monopatinRepository;
+        this.baseURLParada = baseURLParada;
+        this.baseURLLogMantenimiento = baseURLLogMantenimiento;
     }
     
 
@@ -36,7 +47,13 @@ public class MonopatinService {
 
 
     public ResponseEntity<String> save(Monopatin monopatin) {
+    	if(monopatin.getParada()!=null && 
+    		!existeParada(monopatin.getId())) {
+			return new ResponseEntity<String>("La parada no existe",HttpStatus.BAD_REQUEST);
+		}
+    	
     	try {
+    		
     		monopatinRepository.save(monopatin);
     		return new ResponseEntity<String>("agregado", HttpStatus.CREATED);
     	}catch(IllegalArgumentException e) {
@@ -44,7 +61,12 @@ public class MonopatinService {
     	}
     }
 
-    public ResponseEntity<Monopatin> findById(Integer id) {
+    private boolean existeParada(Integer id) {
+		return this.restTemplate.getForEntity(this.baseURLParada + "/" + id, Object.class).getStatusCode().is2xxSuccessful();
+	}
+
+
+	public ResponseEntity<Monopatin> findById(Integer id) {
     	Optional<Monopatin> monopatin = monopatinRepository.findById(id);
     	
     	if(monopatin.isPresent()) {
@@ -111,6 +133,7 @@ public class MonopatinService {
 
 	public ResponseEntity<String> delete(Integer id) {
 		this.monopatinRepository.deleteById(id);
+		this.restTemplate.delete(baseURLParada + "/"+ id);
 		return new ResponseEntity<String>(HttpStatus.OK);
 	}
 
@@ -126,6 +149,7 @@ public class MonopatinService {
 			Monopatin monopatin = this.monopatinRepository.findById(id).orElseThrow();
 			if(mantenimiento!=null) {
 				monopatin.setMantenimiento(mantenimiento);
+				this.restTemplate.postForEntity(baseURLLogMantenimiento + "/", monopatin, null);
 			}
 			if(disponible!=null) {
 				monopatin.setDisponible(false);
@@ -140,6 +164,26 @@ public class MonopatinService {
 			return new ResponseEntity<String>("El monopatin no existe",HttpStatus.NOT_FOUND);
 		}
 		
+	}
+
+
+	public ResponseEntity<?> patch(Monopatin monopatinIncompleto, Integer id) {
+		if((monopatinIncompleto.getId()!=null)) {
+			return new ResponseEntity<String>("No se puede editar id",HttpStatus.BAD_REQUEST);
+		}
+		if(monopatinIncompleto.getParada()!=null && !existeParada(monopatinIncompleto.getId())) {
+			return new ResponseEntity<String>("La parada no existe",HttpStatus.BAD_REQUEST);
+		}
+		
+		
+		try {
+			Monopatin monopatin = this.monopatinRepository.findById(id).orElseThrow();
+			GenericObjectPatcher.patch(monopatinIncompleto, monopatin);
+			monopatinRepository.save(monopatin);
+			return new ResponseEntity<String>(HttpStatus.OK);
+		}catch(NoSuchElementException e) {
+			return new ResponseEntity<String>("id Invalido",HttpStatus.NOT_FOUND);
+		}
 	}
 	
 	

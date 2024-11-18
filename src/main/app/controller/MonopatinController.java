@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import main.app.dto.MonopatinDTO;
 import main.app.dto.ReporteOperacionDTO;
 import main.app.model.Monopatin;
 import main.app.service.MonopatinService;
@@ -70,6 +71,11 @@ public class MonopatinController {
 												@RequestParam (required=false) Boolean encendido,
 												@PathVariable Integer id){
 		return monopatinService.cambiarEstado(id,mantenimiento,disponible,encendido);
+	}
+	
+	@PatchMapping("/{id}")
+	public ResponseEntity<?> patch(@RequestBody Monopatin monopatin,@PathVariable Integer id){
+		return monopatinService.patch(monopatin,id);
 	}
 	
 	//TODO patch monopatin
