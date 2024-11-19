@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,6 +21,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.media.*;
+import main.app.dto.MonopatinDTO;
 import main.app.dto.ReporteKilometrosMonopatinDTO;
 import main.app.dto.ReporteOperacionDTO;
 import main.app.dto.ReporteTiempoMonopatinDTO;
@@ -143,7 +145,8 @@ public class MonopatinController {
     public ResponseEntity<List<ReporteViajesMonopatinDTO>> reporteViajes(@RequestParam(required = false) Integer MaxViajes) {
         return monopatinService.reporteViajes(MaxViajes);
     }
-
+    
+    
     @Operation(summary = "Generar reporte de tiempo de uso", description = "Recupera un reporte con el tiempo de uso de los monopatines.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Reporte de tiempo de uso obtenido exitosamente",
@@ -164,5 +167,15 @@ public class MonopatinController {
     @GetMapping("/reporteKilometros")
     public ResponseEntity<List<ReporteKilometrosMonopatinDTO>> reportePorKilometros(@RequestParam(required = false) boolean conPausa) {
         return monopatinService.reportePorKilometros(conPausa);
+    }
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<String> updateMonopatin (@PathVariable Integer idMonopatin,@RequestBody Monopatin monopatin){
+    	return this.monopatinService.updateMonopatin(idMonopatin,monopatin);
+    }
+    
+    @PutMapping("/{id}/estacionar")
+    public ResponseEntity<String> estacionar (@PathVariable Integer idMonopatin){
+    	return this.monopatinService.estacionar(idMonopatin);
     }
 }

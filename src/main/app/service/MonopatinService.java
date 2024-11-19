@@ -12,9 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import org.springframework.core.ParameterizedTypeReference;
@@ -25,6 +27,7 @@ import main.app.dto.ReporteKilometrosMonopatinDTO;
 import main.app.dto.ReporteOperacionDTO;
 import main.app.dto.ReporteTiempoMonopatinDTO;
 import main.app.dto.ReporteViajesMonopatinDTO;
+import main.app.dto.UbicacionDTO;
 import main.app.model.Monopatin;
 import main.app.repository.MonopatinRepository;
 import main.app.utils.GenericObjectPatcher;
@@ -133,19 +136,28 @@ public class MonopatinService {
     }
     
   //TODO verificar el url
-    /*
-    public boolean verificarUbicacionEnParada(GPSDTO gpsMonopatin) {
-        String url = "No se si esto esta bien";
-
-        // Crear el objeto de solicitud con GPS del monopat�n y ID de parada
-        VerificacionParadaDTO solicitud = new VerificacionParadaDTO(gpsMonopatin);
-        
-        // Enviar la solicitud al microservicio de Parada y obtener la respuesta
-        ResponseEntity<Boolean> response = restTemplate.postForEntity(url, solicitud, Boolean.class);
-
-        // Retornar el resultado de la verificaci�n 
-        return response.getBody() != null && response.getBody();
-    }*/
+    
+    public ResponseEntity<String> estacionar(Integer idMonopatin) {
+    	Optional<Monopatin> optionalMonopatin = this.monopatinRepository.findById(idMonopatin);
+    	try {
+    		Monopatin monopatin = optionalMonopatin.orElseThrow();
+    		String url = this.baseURLParada + "/estacionar";
+    		
+    		// Enviar la solicitud al microservicio de Parada y obtener la respuesta
+    		ResponseEntity<Integer> response = restTemplate.postForEntity(url, monopatin, Integer.class);
+    		if(response.getStatusCode().is2xxSuccessful()) {
+    			monopatin.setDisponible(true);
+    			monopatin.setEncendido(false);
+    			monopatin.setIdParada(response.getBody());
+    			this.monopatinRepository.save(monopatin);
+    			return new ResponseEntity<String>("Estacionado",HttpStatus.OK);
+    		}else {
+    			return new ResponseEntity<String>("El monopatin no se encuentra en una parada",HttpStatus.CONFLICT);
+    		}
+    	}catch(NoSuchElementException e) {
+    		return new ResponseEntity<String>("El monopatin no existe",HttpStatus.NOT_FOUND);
+    	}
+    }
 
 
 	public ResponseEntity<String> delete(Integer id) {
@@ -254,6 +266,20 @@ public class MonopatinService {
 		String url = this.baseURLViajes + "/reporteKilometrosMonopatin?pausas=" + conPausa;
 		
 		return new ResponseEntity<List<ReporteKilometrosMonopatinDTO>>(this.<ReporteKilometrosMonopatinDTO>getReporte(url),HttpStatus.OK);
+	}
+
+
+	public ResponseEntity<String> updateMonopatin(Integer idMonopatin, Monopatin monopatinNuevo) {
+		Optional<Monopatin> optionalMonopatin = this.monopatinRepository.findById(idMonopatin);
+		try {
+			optionalMonopatin.orElseThrow();
+			monopatinNuevo.setIdMonopatin(idMonopatin);
+			this.monopatinRepository.save(monopatinNuevo);
+			return new ResponseEntity<String>("Actualizado", HttpStatus.OK); 
+		}catch(NoSuchElementException e) {
+			return new ResponseEntity<String>("El Monopatin no existe", HttpStatus.NOT_FOUND); 
+		}
+		
 	}
 	
 }

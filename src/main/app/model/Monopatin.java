@@ -102,5 +102,7 @@ public class Monopatin implements Serializable{
 				+ mantenimiento + "]";
 	}
 
+
+
     
 }
