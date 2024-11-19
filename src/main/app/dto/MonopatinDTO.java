@@ -2,6 +2,8 @@ package main.app.dto;
 
 import java.util.Objects;
 
+import main.app.model.Monopatin;
+
 public class MonopatinDTO {
 	
 	private Integer id;
@@ -14,17 +16,28 @@ public class MonopatinDTO {
 	
 	private double latitud;
 
+	private boolean mantenimiento;
+	
+	private Integer parada;
+
 	public MonopatinDTO() {
 	}
 	
-	public MonopatinDTO(Integer id, boolean isDisponible, boolean isEncendido, double longitud, double latitud) {
+	
+
+	public MonopatinDTO(Integer id, boolean isDisponible, boolean isEncendido, double longitud, double latitud,
+			boolean mantenimiento, Integer parada) {
 		super();
 		this.id = id;
 		this.isDisponible = isDisponible;
 		this.isEncendido = isEncendido;
 		this.longitud = longitud;
 		this.latitud = latitud;
+		this.mantenimiento = mantenimiento;
+		this.parada = parada;
 	}
+
+
 
 	public Integer getId() {
 		return id;
@@ -81,6 +94,28 @@ public class MonopatinDTO {
 			return false;
 		MonopatinDTO other = (MonopatinDTO) obj;
 		return Objects.equals(id, other.id);
+	}
+	
+	public boolean isMantenimiento() {
+		return mantenimiento;
+	}
+
+	public void setMantenimiento(boolean mantenimiento) {
+		this.mantenimiento = mantenimiento;
+	}
+	public void completarInfo(Monopatin monopatin) {
+		this.setDisponible(monopatin.isDisponible());
+		this.setEncendido(monopatin.isEncendido());
+		this.setLatitud(monopatin.getLatitud());
+		this.setLongitud(monopatin.getLongitud());
+	}
+
+	public Integer getParada() {
+		return parada;
+	}
+
+	public void setParada(Integer parada) {
+		this.parada = parada;
 	}
 	
 	

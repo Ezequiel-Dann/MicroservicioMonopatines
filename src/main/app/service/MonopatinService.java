@@ -1,21 +1,28 @@
 package main.app.service;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.servlet.function.EntityResponse;
 
-import main.app.dto.GPSDTO;
+import org.springframework.core.ParameterizedTypeReference;
+
+import main.app.dto.LogMantenimientoDTO;
 import main.app.dto.MonopatinDTO;
+import main.app.dto.ReporteKilometrosMonopatinDTO;
 import main.app.dto.ReporteOperacionDTO;
+import main.app.dto.ReporteTiempoMonopatinDTO;
+import main.app.dto.ReporteViajesMonopatinDTO;
 import main.app.model.Monopatin;
 import main.app.repository.MonopatinRepository;
 import main.app.utils.GenericObjectPatcher;
@@ -31,13 +38,19 @@ public class MonopatinService {
 	
 	@Value("${baseURLLogMantenimiento}")
 	private final String baseURLLogMantenimiento;
+	
+	@Value("${baseURLViajes")
+	private final String baseURLViajes;
+	
+	
 
     
-    public MonopatinService(RestTemplate restTemplate, MonopatinRepository monopatinRepository,String baseURLParada,String baseURLLogMantenimiento) {
+    public MonopatinService(RestTemplate restTemplate, MonopatinRepository monopatinRepository,String baseURLParada,String baseURLLogMantenimiento, String baseURLViajes) {
         this.restTemplate = restTemplate;
         this.monopatinRepository = monopatinRepository;
         this.baseURLParada = baseURLParada;
         this.baseURLLogMantenimiento = baseURLLogMantenimiento;
+        this.baseURLViajes = baseURLViajes;
     }
     
 
@@ -48,7 +61,7 @@ public class MonopatinService {
 
     public ResponseEntity<String> save(Monopatin monopatin) {
     	if(monopatin.getParada()!=null && 
-    		!existeParada(monopatin.getId())) {
+    		!existeParada(monopatin.getIdMonopatin())) {
 			return new ResponseEntity<String>("La parada no existe",HttpStatus.BAD_REQUEST);
 		}
     	
@@ -168,23 +181,72 @@ public class MonopatinService {
 
 
 	public ResponseEntity<?> patch(Monopatin monopatinIncompleto, Integer id) {
-		if((monopatinIncompleto.getId()!=null)) {
+		if((monopatinIncompleto.getIdMonopatin()!=null && monopatinIncompleto.getIdMonopatin()!=id)) {
 			return new ResponseEntity<String>("No se puede editar id",HttpStatus.BAD_REQUEST);
 		}
-		if(monopatinIncompleto.getParada()!=null && !existeParada(monopatinIncompleto.getId())) {
+		if(monopatinIncompleto.getParada()!=null && !existeParada(monopatinIncompleto.getIdMonopatin())) {
 			return new ResponseEntity<String>("La parada no existe",HttpStatus.BAD_REQUEST);
 		}
 		
 		
 		try {
 			Monopatin monopatin = this.monopatinRepository.findById(id).orElseThrow();
+			boolean mantenimiento = monopatin.isMantenimiento();
 			GenericObjectPatcher.patch(monopatinIncompleto, monopatin);
 			monopatinRepository.save(monopatin);
-			return new ResponseEntity<String>(HttpStatus.OK);
-		}catch(NoSuchElementException e) {
-			return new ResponseEntity<String>("id Invalido",HttpStatus.NOT_FOUND);
+			
+			if(mantenimiento != monopatin.isMantenimiento()) {
+				String reporte = monopatin.isMantenimiento() ? "Entro en mantenimiento" : "Termino el mantenimiento";
+				LogMantenimientoDTO log = new LogMantenimientoDTO(LocalDate.now(),id,reporte);
+				this.restTemplate.postForObject(this.baseURLLogMantenimiento + "/", log, null);
+			}
+			return new ResponseEntity<String>("Modificado",HttpStatus.OK);
+		}catch(NoSuchElementException | IllegalArgumentException e ) {
+			return new ResponseEntity<String>("El Monopatin no existe", HttpStatus.NOT_FOUND);
 		}
 	}
+
+
+	public ResponseEntity<List<ReporteViajesMonopatinDTO>> reporteViajes(Integer maxViajes) {
+		
+		String url = this.baseURLViajes + "/cantViajesMonopatin";
+		if(maxViajes!=null) {
+			url += "/maxViajes=" + maxViajes;
+		}
+		return new ResponseEntity<List<ReporteViajesMonopatinDTO>>(this.<ReporteViajesMonopatinDTO>getReporte(url),HttpStatus.OK);
+	}
 	
+	public ResponseEntity<List<ReporteTiempoMonopatinDTO>> reportePorTiempo(boolean incluirPausas) {
+		
+		String url = this.baseURLViajes + "/reporteMonopatin?pausas=" + incluirPausas;
+		
+		return new ResponseEntity<List<ReporteTiempoMonopatinDTO>>(this.<ReporteTiempoMonopatinDTO>getReporte(url),HttpStatus.OK);
+	}
+	
+	private <T extends MonopatinDTO> List<T> getReporte(String url) {
+		ParameterizedTypeReference<List<T>> type = new ParameterizedTypeReference<List<T>>(){};
+		List<T> reporte = this.restTemplate.exchange(url,HttpMethod.GET,null,type).getBody();
+		
+		//to map para acceder en tiempo constante cuando se busca la informacion de un monopatin especifico para completar el dto
+		Map<Integer,Monopatin> mapaMonopatines =this.monopatinRepository.findAll().stream().collect(Collectors.toMap(Monopatin::getIdMonopatin, Function.identity()));
+		
+		for (T dto : reporte) {
+			dto.completarInfo(mapaMonopatines.get(dto.getId()));
+			
+			//no se si anda
+			//GenericObjectPatcher.patch(mapaMonopatines.get(dto.getId()), dto);
+			
+		}
+		
+		return reporte;
+		
+	}
+
+
+	public ResponseEntity<List<ReporteKilometrosMonopatinDTO>> reportePorKilometros(boolean conPausa) {
+		String url = this.baseURLViajes + "/reporteKilometrosMonopatin?pausas=" + conPausa;
+		
+		return new ResponseEntity<List<ReporteKilometrosMonopatinDTO>>(this.<ReporteKilometrosMonopatinDTO>getReporte(url),HttpStatus.OK);
+	}
 	
 }

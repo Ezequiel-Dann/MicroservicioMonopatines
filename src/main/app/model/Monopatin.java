@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 public class Monopatin implements Serializable{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Integer idMonopatin;
 
     @Column
     private boolean isDisponible;
@@ -30,7 +30,7 @@ public class Monopatin implements Serializable{
     public Monopatin(Integer id, boolean isDisponible, boolean isEncendido, double longitud, double latitud,
 			Integer parada,boolean mantenimiento) {
 		super();
-		this.id = id;
+		this.idMonopatin = id;
 		this.isDisponible = isDisponible;
 		this.isEncendido = isEncendido;
 		this.longitud = longitud;
@@ -57,8 +57,8 @@ public class Monopatin implements Serializable{
 		this.parada = parada;
 	}
 
-	public Integer getId() {
-        return id;
+	public Integer getIdMonopatin() {
+        return idMonopatin;
     }
 
     public boolean isDisponible() {
