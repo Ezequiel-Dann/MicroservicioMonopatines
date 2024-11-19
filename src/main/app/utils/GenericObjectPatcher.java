@@ -15,11 +15,11 @@ public class GenericObjectPatcher {
 	 * @param incompleteObject object with fields to insert into other object
 	 * @param CompleteObject object with fields to be replaced
 	 */
-	public static<T> void patch(T incompleteObject,T CompleteObject) {
+	public static<T> void patch(T providerObject,T recieverObject) {
 
 		//GET THE COMPILED VERSION OF THE CLASS
-        Class<?> completeObjectClass= CompleteObject.getClass();
-        Field[] fields=completeObjectClass.getDeclaredFields();
+        Class<?> recieverObjectClass= recieverObject.getClass();
+        Field[] fields=recieverObjectClass.getDeclaredFields();
         
         for(Field field : fields){
             //CANT ACCESS IF THE FIELD IS PRIVATE
@@ -27,9 +27,9 @@ public class GenericObjectPatcher {
 
             //CHECK IF THE VALUE OF THE FIELD IS NOT NULL, IF NOT UPDATE EXISTING INTERN
             try {
-            	Object value=field.get(incompleteObject);
+            	Object value=field.get(providerObject);
             	if(value!=null){
-            		field.set(CompleteObject,value);
+            		field.set(recieverObject,value);
             	}            	
             }catch(Exception e) {
             	

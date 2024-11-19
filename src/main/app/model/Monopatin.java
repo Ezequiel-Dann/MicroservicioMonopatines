@@ -8,18 +8,18 @@ import jakarta.persistence.*;
 public class Monopatin implements Serializable{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Integer idMonopatin;
 
     @Column
-    private boolean isDisponible;
+    private boolean disponible;
     @Column
-    private boolean isEncendido;
+    private boolean encendido;
     @Column
-    private double longitud;
+    private Double longitud;
     @Column
-    private double latitud;
+    private Double latitud;
     @Column
-    private Integer parada;
+    private Integer idParada;
     @Column 
     private boolean mantenimiento;
     
@@ -27,56 +27,41 @@ public class Monopatin implements Serializable{
     	
     }
 
-    public Monopatin(Integer id, boolean isDisponible, boolean isEncendido, double longitud, double latitud,
+    public Monopatin(Integer id, boolean disponible, boolean encendido, Double longitud, Double latitud,
 			Integer parada,boolean mantenimiento) {
 		super();
-		this.id = id;
-		this.isDisponible = isDisponible;
-		this.isEncendido = isEncendido;
+		this.idMonopatin = id;
+		this.disponible = disponible;
+		this.encendido = encendido;
 		this.longitud = longitud;
 		this.latitud = latitud;
-		this.parada = parada;
+		this.idParada = parada;
 		this.mantenimiento = mantenimiento;
 	}
 
-    
-    
-	public boolean isMantenimiento() {
-		return mantenimiento;
+	public Integer getIdMonopatin() {
+		return idMonopatin;
 	}
 
-	public void setMantenimiento(boolean mantenimiento) {
-		this.mantenimiento = mantenimiento;
+	public void setIdMonopatin(Integer idMonopatin) {
+		this.idMonopatin = idMonopatin;
 	}
 
-	public Integer getParada() {
-		return parada;
+	public boolean isDisponible() {
+		return disponible;
 	}
 
-	public void setParada(Integer parada) {
-		this.parada = parada;
+	public void setDisponible(boolean disponible) {
+		this.disponible = disponible;
 	}
 
-	public Integer getId() {
-        return id;
-    }
+	public boolean isEncendido() {
+		return encendido;
+	}
 
-    public boolean isDisponible() {
-        return isDisponible;
-    }
-
-    public boolean isEncendido() {
-        return isEncendido;
-    }
-
-
-    public void setDisponible(boolean disponible) {
-        isDisponible = disponible;
-    }
-
-    public void setEncendido(boolean encendido) {
-        isEncendido = encendido;
-    }
+	public void setEncendido(boolean encendido) {
+		this.encendido = encendido;
+	}
 
 	public double getLongitud() {
 		return longitud;
@@ -86,13 +71,36 @@ public class Monopatin implements Serializable{
 		this.longitud = longitud;
 	}
 
-	public double getLatitud() {
+	public Double getLatitud() {
 		return latitud;
 	}
 
-	public void setLatitud(double latitud) {
+	public void setLatitud(Double latitud) {
 		this.latitud = latitud;
 	}
 
+	public Integer getIdParada() {
+		return idParada;
+	}
 
+	public void setIdParada(Integer idParada) {
+		this.idParada = idParada;
+	}
+
+	public boolean isMantenimiento() {
+		return mantenimiento;
+	}
+
+	public void setMantenimiento(boolean mantenimiento) {
+		this.mantenimiento = mantenimiento;
+	}
+
+	@Override
+	public String toString() {
+		return "Monopatin [idMonopatin=" + idMonopatin + ", disponible=" + disponible + ", encendido=" + encendido
+				+ ", longitud=" + longitud + ", latitud=" + latitud + ", idParada=" + idParada + ", mantenimiento="
+				+ mantenimiento + "]";
+	}
+
+    
 }
