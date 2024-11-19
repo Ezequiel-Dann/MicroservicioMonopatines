@@ -188,21 +188,20 @@ public class MonopatinService {
 		if((monopatinIncompleto.getIdMonopatin()!=null && monopatinIncompleto.getIdMonopatin()!=id)) {
 			return new ResponseEntity<String>("No se puede editar id",HttpStatus.BAD_REQUEST);
 		}
+		System.out.println(monopatinIncompleto);
 		if(monopatinIncompleto.getIdParada()!=null && !existeParada(monopatinIncompleto.getIdParada())) {
 			return new ResponseEntity<String>("La parada no existe",HttpStatus.BAD_REQUEST);
 		}
 		
-		
 		try {
 			Monopatin monopatin = this.monopatinRepository.findById(id).orElseThrow();
-			boolean mantenimiento = monopatin.isMantenimiento();
-			System.out.println(monopatin);
-			System.out.println(monopatinIncompleto);
+			
+			//mantenimiento anterior
+			boolean mantenimientoAnterior = monopatin.isMantenimiento();
 			GenericObjectPatcher.patch(monopatinIncompleto, monopatin);
-			System.out.println(monopatin);
 			monopatinRepository.save(monopatin);
 			
-			if(mantenimiento != monopatin.isMantenimiento()) {
+			if(mantenimientoAnterior != monopatin.isMantenimiento()) {
 				String reporte = monopatin.isMantenimiento() ? "Entro en mantenimiento" : "Termino el mantenimiento";
 				LogMantenimientoDTO log = new LogMantenimientoDTO(LocalDate.now(),id,reporte);
 				//this.restTemplate.postForObject(this.baseURLLogMantenimiento + "/", log, null);

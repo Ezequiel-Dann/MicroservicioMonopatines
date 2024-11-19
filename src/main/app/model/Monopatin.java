@@ -67,7 +67,7 @@ public class Monopatin implements Serializable{
 		return longitud;
 	}
 
-	public void setLongitud(double longitud) {
+	public void setLongitud(Double longitud) {
 		this.longitud = longitud;
 	}
 
