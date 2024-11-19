@@ -1,0 +1,163 @@
+openapi: 3.0.0
+info:
+  title: Monopatin API
+  description: API para la gestión de monopatines
+  version: 1.0.0
+
+paths:
+  /monopatines/:
+    get:
+      summary: Obtener todos los monopatines
+      operationId: getAllMonopatines
+      tags:
+        - Monopatin
+      responses:
+        '200':
+          description: Lista de monopatines obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Monopatin'
+    post:
+      summary: Guardar un nuevo monopatín
+      operationId: saveMonopatin
+      tags:
+        - Monopatin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Monopatin'
+      responses:
+        '201':
+          description: Monopatín creado exitosamente
+        '400':
+          description: Error al crear el monopatín
+
+  /monopatines/{id}:
+    get:
+      summary: Obtener monopatín por ID
+      operationId: getMonopatinById
+      tags:
+        - Monopatin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Monopatín encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Monopatin'
+        '404':
+          description: Monopatín no encontrado
+    delete:
+      summary: Eliminar monopatín por ID
+      operationId: deleteMonopatin
+      tags:
+        - Monopatin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Monopatín eliminado exitosamente
+        '404':
+          description: Monopatín no encontrado
+    patch:
+      summary: Cambiar el estado de un monopatín
+      operationId: patchMonopatinEstado
+      tags:
+        - Monopatin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: mantenimiento
+          in: query
+          schema:
+            type: boolean
+        - name: disponible
+          in: query
+          schema:
+            type: boolean
+        - name: encendido
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Estado del monopatín cambiado exitosamente
+        '400':
+          description: Error al cambiar el estado del monopatín
+
+  /monopatines/disponibles:
+    get:
+      summary: Obtener todos los monopatines disponibles
+      operationId: getAllMonopatinesDisponibles
+      tags:
+        - Monopatin
+      responses:
+        '200':
+          description: Lista de monopatines disponibles obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Monopatin'
+
+  /monopatines/reporteOperacion:
+    get:
+      summary: Obtener reporte de operación y mantenimiento
+      operationId: getReporteOperacionYMantenimiento
+      tags:
+        - Monopatin
+      responses:
+        '200':
+          description: Reporte de operación y mantenimiento obtenido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReporteOperacionDTO'
+
+components:
+  schemas:
+    Monopatin:
+      type: object
+      properties:
+        id:
+          type: integer
+        modelo:
+          type: string
+        marca:
+          type: string
+        estado:
+          type: string
+          description: Estado del monopatín (Ej: disponible, en mantenimiento)
+        kilometraje:
+          type: number
+          format: float
+          description: Kilometraje del monopatín
+
+    ReporteOperacionDTO:
+      type: object
+      properties:
+        totalKilometraje:
+          type: number
+          format: float
+        tiempoOperativo:
+          type: string
+          description: Tiempo total operativo del monopatín
