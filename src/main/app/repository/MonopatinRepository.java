@@ -6,19 +6,21 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import main.app.dto.ReporteOperacionDTO;
 import main.app.model.Monopatin;
 
+@Repository
 public interface MonopatinRepository extends JpaRepository<Monopatin, Integer>{
-	@Query("SELECT m FROM Monopatin m WHERE m.paradaId = :paradaId")
-    List<Monopatin> findByParadaId(@Param("paradaId") Integer paradaId);
+	@Query("SELECT m FROM Monopatin m WHERE m.idParada = :idParada")
+    List<Monopatin> findByParadaId(@Param("idParada") Integer idParada);
 
-    @Query("SELECT m FROM Monopatin m WHERE m.mantenimiento = false AND m.disponible = true AND m.paradaId = :paradaId")
-    List<Monopatin> findDisponiblesByParadaId(@Param("paradaId") Integer paradaId);
+    @Query("SELECT m FROM Monopatin m WHERE m.mantenimiento = false AND m.disponible = true AND m.idParada = :idParada")
+    List<Monopatin> findDisponiblesByParadaId(@Param("idParada") Integer idParada);
 
-    @Query("SELECT m FROM Monopatin m WHERE m.mantenimiento = true AND m.paradaId = :paradaId")
-    List<Monopatin> findEnMantenimientoByParadaId(@Param("paradaId") Integer paradaId);
+    @Query("SELECT m FROM Monopatin m WHERE m.mantenimiento = true AND m.idParada = :idParada")
+    List<Monopatin> findEnMantenimientoByParadaId(@Param("idParada") Integer idParada);
     
     @Query("SELECT m FROM Monopatin m WHERE m.mantenimiento = false AND m.disponible = true")
     List<Monopatin> findAllDisponibles();

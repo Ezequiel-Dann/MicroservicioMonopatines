@@ -1,6 +1,8 @@
 package main.app.dto;
 
-public class ReporteOperacionDTO {
+import java.io.Serializable;
+
+public class ReporteOperacionDTO implements Serializable{
 	private Integer operacion;
 	private Integer mantenimiento;
 	
@@ -11,10 +13,10 @@ public class ReporteOperacionDTO {
 	}
 
 
-	public ReporteOperacionDTO(Integer operacion, Integer mantenimiento) {
+	public ReporteOperacionDTO(Long operacion, Long mantenimiento) {
 		super();
-		this.operacion = operacion;
-		this.mantenimiento = mantenimiento;
+		this.operacion = operacion.intValue();
+		this.mantenimiento = mantenimiento.intValue();
 	}
 
 

@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import org.springframework.core.ParameterizedTypeReference;
@@ -27,6 +29,7 @@ import main.app.model.Monopatin;
 import main.app.repository.MonopatinRepository;
 import main.app.utils.GenericObjectPatcher;
 
+@Service
 public class MonopatinService {
 	@Autowired
 	private final MonopatinRepository monopatinRepository;
@@ -34,23 +37,20 @@ public class MonopatinService {
 	private final RestTemplate restTemplate;
 	
 	@Value("${baseURLParada}")
-	private final String baseURLParada;
+	private String baseURLParada;
 	
 	@Value("${baseURLLogMantenimiento}")
-	private final String baseURLLogMantenimiento;
+	private String baseURLLogMantenimiento;
 	
-	@Value("${baseURLViajes")
-	private final String baseURLViajes;
+	@Value("${baseURLViajes}")
+	private String baseURLViajes;
 	
 	
 
     
-    public MonopatinService(RestTemplate restTemplate, MonopatinRepository monopatinRepository,String baseURLParada,String baseURLLogMantenimiento, String baseURLViajes) {
+    public MonopatinService(RestTemplate restTemplate, MonopatinRepository monopatinRepository) {
         this.restTemplate = restTemplate;
         this.monopatinRepository = monopatinRepository;
-        this.baseURLParada = baseURLParada;
-        this.baseURLLogMantenimiento = baseURLLogMantenimiento;
-        this.baseURLViajes = baseURLViajes;
     }
     
 
@@ -60,8 +60,8 @@ public class MonopatinService {
 
 
     public ResponseEntity<String> save(Monopatin monopatin) {
-    	if(monopatin.getParada()!=null && 
-    		!existeParada(monopatin.getIdMonopatin())) {
+    	if(monopatin.getIdParada()!=null && 
+    		!existeParada(monopatin.getIdParada())) {
 			return new ResponseEntity<String>("La parada no existe",HttpStatus.BAD_REQUEST);
 		}
     	
@@ -75,7 +75,11 @@ public class MonopatinService {
     }
 
     private boolean existeParada(Integer id) {
-		return this.restTemplate.getForEntity(this.baseURLParada + "/" + id, Object.class).getStatusCode().is2xxSuccessful();
+    	try {
+    		return this.restTemplate.getForEntity(this.baseURLParada + "/" + id, Object.class).getStatusCode().is2xxSuccessful();
+    	}catch(HttpClientErrorException.NotFound e) {
+    		return false;
+    	}
 	}
 
 
@@ -184,7 +188,7 @@ public class MonopatinService {
 		if((monopatinIncompleto.getIdMonopatin()!=null && monopatinIncompleto.getIdMonopatin()!=id)) {
 			return new ResponseEntity<String>("No se puede editar id",HttpStatus.BAD_REQUEST);
 		}
-		if(monopatinIncompleto.getParada()!=null && !existeParada(monopatinIncompleto.getIdMonopatin())) {
+		if(monopatinIncompleto.getIdParada()!=null && !existeParada(monopatinIncompleto.getIdParada())) {
 			return new ResponseEntity<String>("La parada no existe",HttpStatus.BAD_REQUEST);
 		}
 		
@@ -192,13 +196,17 @@ public class MonopatinService {
 		try {
 			Monopatin monopatin = this.monopatinRepository.findById(id).orElseThrow();
 			boolean mantenimiento = monopatin.isMantenimiento();
+			System.out.println(monopatin);
+			System.out.println(monopatinIncompleto);
 			GenericObjectPatcher.patch(monopatinIncompleto, monopatin);
+			System.out.println(monopatin);
 			monopatinRepository.save(monopatin);
 			
 			if(mantenimiento != monopatin.isMantenimiento()) {
 				String reporte = monopatin.isMantenimiento() ? "Entro en mantenimiento" : "Termino el mantenimiento";
 				LogMantenimientoDTO log = new LogMantenimientoDTO(LocalDate.now(),id,reporte);
-				this.restTemplate.postForObject(this.baseURLLogMantenimiento + "/", log, null);
+				//this.restTemplate.postForObject(this.baseURLLogMantenimiento + "/", log, null);
+				System.out.println(log.getFecha());
 			}
 			return new ResponseEntity<String>("Modificado",HttpStatus.OK);
 		}catch(NoSuchElementException | IllegalArgumentException e ) {

@@ -29,7 +29,7 @@ public class GenericObjectPatcher {
             try {
             	Object value=field.get(providerObject);
             	if(value!=null){
-            		field.set(recieverObjectClass,value);
+            		field.set(recieverObject,value);
             	}            	
             }catch(Exception e) {
             	
