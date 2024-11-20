@@ -169,12 +169,12 @@ public class MonopatinController {
         return monopatinService.reportePorKilometros(conPausa);
     }
     
-    @PutMapping("/{id}")
-    public ResponseEntity<String> updateMonopatin (@PathVariable Integer idMonopatin,@RequestBody Monopatin monopatin){
-    	return this.monopatinService.updateMonopatin(idMonopatin,monopatin);
+    @PutMapping("/{idMonopatin}")
+    public ResponseEntity<?> updateMonopatin (@PathVariable Integer idMonopatin,@RequestBody Monopatin monopatin){
+    	return this.monopatinService.patch(monopatin,idMonopatin);
     }
     
-    @PutMapping("/{id}/estacionar")
+    @PutMapping("/{idMonopatin}/estacionar")
     public ResponseEntity<String> estacionar (@PathVariable Integer idMonopatin){
     	return this.monopatinService.estacionar(idMonopatin);
     }

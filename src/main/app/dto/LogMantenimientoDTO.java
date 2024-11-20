@@ -1,28 +1,28 @@
 package main.app.dto;
 
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class LogMantenimientoDTO implements Serializable{
-	private LocalDate fecha;
+	private LocalDateTime fecha;
 	private Integer idMonopatin;
 	private String reporte;
 	
 	public LogMantenimientoDTO() {
 	}
 	
-	public LogMantenimientoDTO(LocalDate fecha, Integer idMonopatin, String reporte) {
+	public LogMantenimientoDTO(LocalDateTime fecha, Integer idMonopatin, String reporte) {
 		super();
 		this.fecha = fecha;
 		this.idMonopatin = idMonopatin;
 		this.reporte = reporte;
 	}
 
-	public LocalDate getFecha() {
+	public LocalDateTime getFecha() {
 		return fecha;
 	}
 
-	public void setFecha(LocalDate fecha) {
+	public void setFecha(LocalDateTime fecha) {
 		this.fecha = fecha;
 	}
 

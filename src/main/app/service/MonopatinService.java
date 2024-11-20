@@ -1,6 +1,7 @@
 package main.app.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -10,6 +11,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -30,6 +33,7 @@ import main.app.dto.ReporteViajesMonopatinDTO;
 import main.app.dto.UbicacionDTO;
 import main.app.model.Monopatin;
 import main.app.repository.MonopatinRepository;
+import main.app.security.TokenHandler;
 import main.app.utils.GenericObjectPatcher;
 
 @Service
@@ -38,6 +42,8 @@ public class MonopatinService {
 	private final MonopatinRepository monopatinRepository;
 	@Autowired
 	private final RestTemplate restTemplate;
+	@Autowired
+	private final TokenHandler tokenHandler;
 	
 	@Value("${baseURLParada}")
 	private String baseURLParada;
@@ -47,13 +53,12 @@ public class MonopatinService {
 	
 	@Value("${baseURLViajes}")
 	private String baseURLViajes;
-	
-	
 
     
-    public MonopatinService(RestTemplate restTemplate, MonopatinRepository monopatinRepository) {
+    public MonopatinService(RestTemplate restTemplate, MonopatinRepository monopatinRepository,TokenHandler tokenHandler) {
         this.restTemplate = restTemplate;
         this.monopatinRepository = monopatinRepository;
+		this.tokenHandler = tokenHandler;
     }
     
 
@@ -79,7 +84,10 @@ public class MonopatinService {
 
     private boolean existeParada(Integer id) {
     	try {
-    		return this.restTemplate.getForEntity(this.baseURLParada + "/" + id, Object.class).getStatusCode().is2xxSuccessful();
+    		HttpHeaders header = tokenHandler.createMicroserviceHeader();
+    		HttpEntity<String> entity = new HttpEntity<String>(header);
+    		
+    		return this.restTemplate.exchange(this.baseURLParada + "/" + id,HttpMethod.GET,entity, Object.class).getStatusCode().is2xxSuccessful();
     	}catch(HttpClientErrorException.NotFound e) {
     		return false;
     	}
@@ -139,12 +147,18 @@ public class MonopatinService {
     
     public ResponseEntity<String> estacionar(Integer idMonopatin) {
     	Optional<Monopatin> optionalMonopatin = this.monopatinRepository.findById(idMonopatin);
+    	System.out.println(1);
+    	System.out.println(tokenHandler.getToken());
     	try {
     		Monopatin monopatin = optionalMonopatin.orElseThrow();
-    		String url = this.baseURLParada + "/estacionar";
+    		String url = this.baseURLParada + "/estacionarMonopatin";
+    		
     		
     		// Enviar la solicitud al microservicio de Parada y obtener la respuesta
-    		ResponseEntity<Integer> response = restTemplate.postForEntity(url, monopatin, Integer.class);
+    		HttpHeaders header = tokenHandler.createMicroserviceHeader();
+    		HttpEntity<Monopatin> entity = new HttpEntity<Monopatin>(monopatin,header);
+    		
+    		ResponseEntity<Integer> response = restTemplate.postForEntity(url, entity, Integer.class);
     		if(response.getStatusCode().is2xxSuccessful()) {
     			monopatin.setDisponible(true);
     			monopatin.setEncendido(false);
@@ -161,8 +175,13 @@ public class MonopatinService {
 
 
 	public ResponseEntity<String> delete(Integer id) {
+		
+		HttpHeaders header = tokenHandler.createMicroserviceHeader();
+		HttpEntity<Integer> entity = new HttpEntity<Integer>(id,header);
+		this.restTemplate.exchange(baseURLParada + "/borrarMonopatin/"+ id,HttpMethod.DELETE, entity, String.class);
+		
 		this.monopatinRepository.deleteById(id);
-		this.restTemplate.delete(baseURLParada + "/"+ id);
+		
 		return new ResponseEntity<String>(HttpStatus.OK);
 	}
 
@@ -172,7 +191,7 @@ public class MonopatinService {
 		return new ResponseEntity<ReporteOperacionDTO>(reporte,HttpStatus.OK);
 	}
 
-
+/*
 	public ResponseEntity<String> cambiarEstado(Integer id, Boolean mantenimiento, Boolean disponible, Boolean encendido) {
 		try {
 			Monopatin monopatin = this.monopatinRepository.findById(id).orElseThrow();
@@ -193,7 +212,7 @@ public class MonopatinService {
 			return new ResponseEntity<String>("El monopatin no existe",HttpStatus.NOT_FOUND);
 		}
 		
-	}
+	}*/
 
 
 	public ResponseEntity<?> patch(Monopatin monopatinIncompleto, Integer id) {
@@ -213,14 +232,17 @@ public class MonopatinService {
 			GenericObjectPatcher.patch(monopatinIncompleto, monopatin);
 			monopatinRepository.save(monopatin);
 			
+			String reporte = monopatin.isMantenimiento() ? "Entro en mantenimiento" : "Termino el mantenimiento";
+			LogMantenimientoDTO log = new LogMantenimientoDTO(LocalDateTime.now(),id,reporte);
+			System.out.println(this.baseURLLogMantenimiento + "/");
+			System.out.println(log);
 			if(mantenimientoAnterior != monopatin.isMantenimiento()) {
-				String reporte = monopatin.isMantenimiento() ? "Entro en mantenimiento" : "Termino el mantenimiento";
-				LogMantenimientoDTO log = new LogMantenimientoDTO(LocalDate.now(),id,reporte);
-				//this.restTemplate.postForObject(this.baseURLLogMantenimiento + "/", log, null);
-				System.out.println(log.getFecha());
+				HttpHeaders header = tokenHandler.createMicroserviceHeader();
+				HttpEntity<LogMantenimientoDTO> entity = new HttpEntity<LogMantenimientoDTO>(log,header);
+				this.restTemplate.postForObject(this.baseURLLogMantenimiento + "/", entity, Void.class);
 			}
 			return new ResponseEntity<String>("Modificado",HttpStatus.OK);
-		}catch(NoSuchElementException | IllegalArgumentException e ) {
+		}catch(NoSuchElementException e ) {
 			return new ResponseEntity<String>("El Monopatin no existe", HttpStatus.NOT_FOUND);
 		}
 	}
@@ -243,8 +265,14 @@ public class MonopatinService {
 	}
 	
 	private <T extends MonopatinDTO> List<T> getReporte(String url) {
+		
+		//TODO connect to viajes
+		
+		HttpHeaders header = tokenHandler.createMicroserviceHeader();
+		HttpEntity<String> entity = new HttpEntity<String>(header);
+		
 		ParameterizedTypeReference<List<T>> type = new ParameterizedTypeReference<List<T>>(){};
-		List<T> reporte = this.restTemplate.exchange(url,HttpMethod.GET,null,type).getBody();
+		List<T> reporte = this.restTemplate.exchange(url,HttpMethod.GET,entity,type).getBody();
 		
 		//to map para acceder en tiempo constante cuando se busca la informacion de un monopatin especifico para completar el dto
 		Map<Integer,Monopatin> mapaMonopatines =this.monopatinRepository.findAll().stream().collect(Collectors.toMap(Monopatin::getIdMonopatin, Function.identity()));
@@ -263,6 +291,8 @@ public class MonopatinService {
 
 
 	public ResponseEntity<List<ReporteKilometrosMonopatinDTO>> reportePorKilometros(boolean conPausa) {
+		
+		//TODO connect to viajes
 		String url = this.baseURLViajes + "/reporteKilometrosMonopatin?pausas=" + conPausa;
 		
 		return new ResponseEntity<List<ReporteKilometrosMonopatinDTO>>(this.<ReporteKilometrosMonopatinDTO>getReporte(url),HttpStatus.OK);
@@ -270,11 +300,14 @@ public class MonopatinService {
 
 
 	public ResponseEntity<String> updateMonopatin(Integer idMonopatin, Monopatin monopatinNuevo) {
+		
+		//TODO borrar
 		Optional<Monopatin> optionalMonopatin = this.monopatinRepository.findById(idMonopatin);
 		try {
-			optionalMonopatin.orElseThrow();
+			Monopatin monopatin = optionalMonopatin.orElseThrow();
 			monopatinNuevo.setIdMonopatin(idMonopatin);
-			this.monopatinRepository.save(monopatinNuevo);
+			GenericObjectPatcher.patch(monopatinNuevo, monopatin);
+			this.monopatinRepository.save(monopatin);
 			return new ResponseEntity<String>("Actualizado", HttpStatus.OK); 
 		}catch(NoSuchElementException e) {
 			return new ResponseEntity<String>("El Monopatin no existe", HttpStatus.NOT_FOUND); 
