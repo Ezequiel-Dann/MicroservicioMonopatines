@@ -2,16 +2,12 @@ package main.app.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import main.app.security.ExternalTokenAuthenticationFilter;
-
-
-
-
-
 
 
 @Configuration
@@ -31,11 +27,20 @@ public class SecurityConfig {
                         .requestMatchers(
                      //   		"**",
                      //   		"/**",
+                        		 "/api-docs/**",         // OpenAPI specification path
+                                 "/swagger-ui.html",     // Swagger UI HTML page
+                                 "/swagger-ui/**" 
+                                 /*
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/swagger-ui.html/**",
+                                "/openapi/swagger-ui/**",
+                                "/openapi/monopatin-api.yaml"
+                                */
                         ).permitAll()
-                        .anyRequest().hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/monopatines/").hasRole("ADMIN")
+                        //.anyRequest().hasAnyRole("USER", "ADMIN")
+                        .anyRequest().hasAnyRole("USER")
                 )
                 .addFilterBefore(externalTokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

@@ -2,7 +2,10 @@ package main.app.model;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import jakarta.persistence.*;
+import main.app.dto.PostMonopatinDTO;
 
 @Entity
 public class Monopatin implements Serializable{
@@ -39,6 +42,16 @@ public class Monopatin implements Serializable{
 		this.mantenimiento = mantenimiento;
 	}
 
+	public Monopatin(PostMonopatinDTO nuevoMonopatin) {
+		this.idMonopatin = null;
+		this.disponible = nuevoMonopatin.isDisponible();
+		this.encendido = nuevoMonopatin.isEncendido();
+		this.longitud = nuevoMonopatin.getLongitud();
+		this.latitud = nuevoMonopatin.getLatitud();
+		this.mantenimiento = nuevoMonopatin.isMantenimiento();
+		this.idParada = null;
+	}
+
 	public Integer getIdMonopatin() {
 		return idMonopatin;
 	}
@@ -63,7 +76,7 @@ public class Monopatin implements Serializable{
 		this.encendido = encendido;
 	}
 
-	public double getLongitud() {
+	public Double getLongitud() {
 		return longitud;
 	}
 

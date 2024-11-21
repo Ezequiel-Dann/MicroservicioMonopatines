@@ -26,6 +26,7 @@ import org.springframework.core.ParameterizedTypeReference;
 
 import main.app.dto.LogMantenimientoDTO;
 import main.app.dto.MonopatinDTO;
+import main.app.dto.PostMonopatinDTO;
 import main.app.dto.ReporteKilometrosMonopatinDTO;
 import main.app.dto.ReporteOperacionDTO;
 import main.app.dto.ReporteTiempoMonopatinDTO;
@@ -67,14 +68,15 @@ public class MonopatinService {
     }
 
 
-    public ResponseEntity<String> save(Monopatin monopatin) {
+    public ResponseEntity<String> save(PostMonopatinDTO nuevoMonopatin) {
+    	/*
     	if(monopatin.getIdParada()!=null && 
     		!existeParada(monopatin.getIdParada())) {
 			return new ResponseEntity<String>("La parada no existe",HttpStatus.BAD_REQUEST);
 		}
-    	
+    	*/
     	try {
-    		
+    		Monopatin monopatin = new Monopatin(nuevoMonopatin);
     		monopatinRepository.save(monopatin);
     		return new ResponseEntity<String>("agregado", HttpStatus.CREATED);
     	}catch(IllegalArgumentException e) {
@@ -159,6 +161,7 @@ public class MonopatinService {
     		HttpEntity<Monopatin> entity = new HttpEntity<Monopatin>(monopatin,header);
     		
     		ResponseEntity<Integer> response = restTemplate.postForEntity(url, entity, Integer.class);
+    		
     		if(response.getStatusCode().is2xxSuccessful()) {
     			monopatin.setDisponible(true);
     			monopatin.setEncendido(false);
@@ -166,10 +169,13 @@ public class MonopatinService {
     			this.monopatinRepository.save(monopatin);
     			return new ResponseEntity<String>("Estacionado",HttpStatus.OK);
     		}else {
+    			//aca me parece que no entra nunca
     			return new ResponseEntity<String>("El monopatin no se encuentra en una parada",HttpStatus.CONFLICT);
     		}
     	}catch(NoSuchElementException e) {
     		return new ResponseEntity<String>("El monopatin no existe",HttpStatus.NOT_FOUND);
+    	}catch(HttpClientErrorException.BadRequest e){
+    		return new ResponseEntity<String>("El monopatin no se encuentra en una parada",HttpStatus.CONFLICT);
     	}
     }
 

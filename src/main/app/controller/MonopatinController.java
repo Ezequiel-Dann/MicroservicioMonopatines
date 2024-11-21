@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.media.*;
 import main.app.dto.MonopatinDTO;
+import main.app.dto.PostMonopatinDTO;
 import main.app.dto.ReporteKilometrosMonopatinDTO;
 import main.app.dto.ReporteOperacionDTO;
 import main.app.dto.ReporteTiempoMonopatinDTO;
@@ -62,8 +63,8 @@ public class MonopatinController {
         @ApiResponse(responseCode = "400", description = "Petición incorrecta - entrada no válida")
     })
     @PostMapping("/")
-    public ResponseEntity<String> save(@RequestBody Monopatin monopatin) {
-        return monopatinService.save(monopatin);
+    public ResponseEntity<String> save(@RequestBody PostMonopatinDTO nuevoMonopatin) {
+        return monopatinService.save(nuevoMonopatin);
     }
 
     @Operation(summary = "Buscar monopatín por ID", description = "Recupera un monopatín usando su ID único.")
